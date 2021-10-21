@@ -11,14 +11,28 @@ services:
     volumes:
       - rabbitmq:/var/lib/rabbitmq
 
+  logstash:
+    image: docker.elastic.co/logstash/logstash-oss:7.8.0
+    container_name: logstash
+    ports:
+      - 5044:5044
+      - 5000:5000
+      - 9600:9600
+    depends_on:
+      - elasticsearch
+    volumes:
+      - ./logstash/pipelines.yml:/usr/share/logstash/config/pipelines.yml:ro
+      - ./logstash/pipelines/log.conf:/usr/share/logstash/config/pipelines/log.conf:ro
+
   filebeat:
     image: docker.elastic.co/beats/filebeat-oss:7.8.0
     container_name: filebeat
     depends_on:
       - elasticsearch
+      - logstash
     volumes:
       - filebeat:/usr/share/filebeat/data
-      - ./filebeat/filebeat.yml:/usr/share/filebeat/filebeat.yml
+      - ./filebeat/filebeat.yml:/usr/share/filebeat/filebeat.yml:ro
       - /home/lutsko/Dropbox/ads_microservice/log:/var/log/ads:ro
       - /home/lutsko/Dropbox/geocoder_microservice/log:/var/log/geocoder:ro
       - /home/lutsko/Dropbox/auth_microservice/log:/var/log/auth:ro
@@ -29,6 +43,8 @@ services:
     volumes:
       - elasticsearch:/usr/share/elasticsearch/data
       - ./elasticsearch/elasticsearch.yml:/usr/share/elasticsearch/config/elasticsearch.yml
+    ports:
+      - 9200:9200
 
   kibana:
     image: docker.elastic.co/kibana/kibana-oss:7.8.0
@@ -44,3 +60,4 @@ volumes:
   rabbitmq:
   filebeat:
   elasticsearch:
+  logstash:

@@ -11,8 +11,14 @@ filebeat:
 
 setup:
   kibana:
-    host: "http://kibana:5601"
+    host: http://kibana:5601
 
 output:
+  logstash:
+    enabled: true
+    hosts:
+      - logstash:5044
+
   elasticsearch:
     hosts: ["http://elasticsearch:9200"]
+    bulk_max_size: 1
