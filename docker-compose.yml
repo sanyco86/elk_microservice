@@ -16,10 +16,14 @@ services:
     container_name: logstash
     ports:
       - 5044:5044
+      - 5046:5046
       - 5000:5000
       - 9600:9600
     depends_on:
       - elasticsearch
+    environment:
+      ES_JAVA_OPTS: -Xmx2048m -Xms2048m"
+      http.host: 0.0.0.0
     volumes:
       - ./logstash/pipelines.yml:/usr/share/logstash/config/pipelines.yml:ro
       - ./logstash/pipelines/log.conf:/usr/share/logstash/config/pipelines/log.conf:ro
@@ -40,6 +44,12 @@ services:
   elasticsearch:
     image: docker.elastic.co/elasticsearch/elasticsearch-oss:7.8.0
     container_name: elasticsearch
+    environment:
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
     volumes:
       - elasticsearch:/usr/share/elasticsearch/data
       - ./elasticsearch/elasticsearch.yml:/usr/share/elasticsearch/config/elasticsearch.yml
@@ -56,8 +66,26 @@ services:
     ports:
       - 5601:5601
 
+  prom:
+    image: prom/prometheus
+    container_name: prom
+    ports:
+      - 9090:9090
+    volumes:
+      - prometheus:/prometheus
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+
+  grafana:
+    image: grafana/grafana
+    container_name: grafana
+    ports:
+      - 3005:3000
+    volumes:
+      - grafana:/var/lib/grafana
+
 volumes:
   rabbitmq:
   filebeat:
   elasticsearch:
-  logstash:
+  prometheus:
+  grafana:
